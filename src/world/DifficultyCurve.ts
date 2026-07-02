@@ -15,19 +15,19 @@ export interface DifficultyState {
 
 export class DifficultyCurve {
   sample(worldX: number): DifficultyState {
-    const value = clamp(worldX / 6200, 0, 1);
+    const value = clamp(worldX / 7600, 0, 1);
 
     return {
       value,
-      minGap: 95 + value * 55,
-      maxGap: 250 + value * 95,
-      minWidth: 300 - value * 58,
-      maxWidth: 680 - value * 120,
-      verticalRange: 46 + value * 64,
-      boostChance: 0.1 + value * 0.03,
+      minGap: 82 + value * 70,
+      maxGap: 218 + value * 112,
+      minWidth: 340 - value * 78,
+      maxWidth: 740 - value * 135,
+      verticalRange: 36 + value * 74,
+      boostChance: 0.12 + value * 0.04,
       rampChance: 0,
-      pathChance: Math.max(0.12, 0.24 - value * 0.07),
-      floatingBoneChance: 0.18 + value * 0.12,
+      pathChance: Math.max(0.16, 0.28 - value * 0.08),
+      floatingBoneChance: 0.16 + value * 0.14,
     };
   }
 }

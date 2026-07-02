@@ -77,7 +77,7 @@ La base actuelle est volontairement simple et propre avant de reintroduire les g
 - chaque signal donne os, rocket et relance de vitesse pour rendre la progression plus lisible ;
 - stretch leger de Titan, squash d'atterrissage et lignes de vent rendent les pics de vitesse plus visibles ;
 - Titan ne perd plus automatiquement ses bonus de vitesse en courant ; seule une correction volontaire vers la gauche le ralentit ;
-- l'equilibrage fin des obstacles, de l'economie d'os et des routes bonus reste a poursuivre.
+- premier passage d'equilibrage V1 : debut plus respirable, os plus lisibles, routes bonus plus regulieres et obstacles signatures forces par biome.
 
 ## Debug
 

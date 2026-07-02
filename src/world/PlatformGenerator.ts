@@ -4,6 +4,14 @@ import { GROUND_Y, clamp } from '../game/constants';
 import type { EntityDraft, ObstacleEntityKind, PlatformData, PlatformKind } from '../types/game';
 import { DifficultyCurve } from './DifficultyCurve';
 
+const BIOME_SPAN = 2200;
+const BIOME_OBSTACLES: { signature: ObstacleEntityKind; pool: ObstacleEntityKind[] }[] = [
+  { signature: 'seagull', pool: ['seagull', 'gust', 'cable', 'seagull'] },
+  { signature: 'gust', pool: ['gust', 'menhir', 'seagull', 'gust'] },
+  { signature: 'menhir', pool: ['menhir', 'gust', 'cable', 'menhir'] },
+  { signature: 'cable', pool: ['cable', 'granny', 'seagull', 'cable'] },
+];
+
 export class PlatformGenerator {
   private readonly random: () => number;
   private readonly noise2D: (x: number, y: number) => number;
@@ -47,10 +55,12 @@ export class PlatformGenerator {
     const entities: EntityDraft[] = [];
     const boneCount =
       platform.kind === 'bonus'
-        ? 4 + Math.floor(this.random() * 2)
+        ? 5 + Math.floor(this.random() * 2)
         : platform.kind === 'path'
-          ? 3 + Math.floor(this.random() * 3)
-          : 1 + Math.floor(this.random() * 2);
+          ? 4 + Math.floor(this.random() * 3)
+          : difficulty.value < 0.22
+            ? 2 + Math.floor(this.random() * 2)
+            : 1 + Math.floor(this.random() * 3);
 
     for (let i = 0; i < boneCount; i += 1) {
       const floating =
@@ -77,11 +87,11 @@ export class PlatformGenerator {
 
   createBonusBranch(platform: PlatformData, id: number): PlatformData | undefined {
     const difficulty = this.curve.sample(platform.x);
-    if (platform.id < 5 || platform.kind === 'boost' || platform.kind === 'ramp' || platform.w < 360) {
+    if (platform.id < 4 || platform.kind === 'boost' || platform.kind === 'ramp' || platform.w < 340) {
       return undefined;
     }
 
-    const chance = 0.22 + difficulty.value * 0.12 + (platform.kind === 'path' ? 0.1 : 0);
+    const chance = 0.27 + difficulty.value * 0.13 + (platform.kind === 'path' ? 0.11 : 0);
     if (this.random() > chance) {
       return undefined;
     }
@@ -153,12 +163,13 @@ export class PlatformGenerator {
       return undefined;
     }
 
-    const chance = (platform.kind === 'path' ? 0.34 : 0.24) + difficulty * 0.14;
-    if (this.random() > chance) {
+    const forceSignature = this.shouldForceSignature(platform);
+    const chance = (platform.kind === 'path' ? 0.3 : 0.2) + difficulty * 0.16;
+    if (!forceSignature && this.random() > chance) {
       return undefined;
     }
 
-    const type = this.pickObstacleType(platform.x);
+    const type = this.pickObstacleType(platform.x, forceSignature);
     const x = platform.x + clamp(platform.w * (0.34 + this.random() * 0.36), 96, platform.w - 88);
     const bob = this.random() * Math.PI * 2;
 
@@ -212,15 +223,23 @@ export class PlatformGenerator {
     }
   }
 
-  private pickObstacleType(worldX: number): ObstacleEntityKind {
-    const biome = Math.floor(Math.max(0, worldX) / 2200) % 4;
-    const pools: ObstacleEntityKind[][] = [
-      ['seagull', 'gust', 'cable'],
-      ['gust', 'menhir', 'seagull'],
-      ['menhir', 'gust', 'cable'],
-      ['cable', 'granny', 'seagull'],
-    ];
-    const pool = pools[biome];
+  private shouldForceSignature(platform: PlatformData): boolean {
+    if (platform.id < 7) {
+      return false;
+    }
+
+    const positionInBiome = Math.max(0, platform.x) % BIOME_SPAN;
+    return platform.id % 9 === 0 || (positionInBiome > 320 && positionInBiome < 620);
+  }
+
+  private pickObstacleType(worldX: number, forceSignature: boolean): ObstacleEntityKind {
+    const biome = Math.floor(Math.max(0, worldX) / BIOME_SPAN) % BIOME_OBSTACLES.length;
+    const config = BIOME_OBSTACLES[biome];
+    if (forceSignature) {
+      return config.signature;
+    }
+
+    const pool = config.pool;
     return pool[Math.floor(this.random() * pool.length)];
   }
 }
